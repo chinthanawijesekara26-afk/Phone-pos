@@ -1,0 +1,142 @@
+{
+  "name": "phone-pos",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.js",
+
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts",
+
+    "prepare:standalone": "powershell -ExecutionPolicy Bypass -File .\\prepare-standalone.ps1",
+
+    "electron": "electron .",
+
+    "electron:build": "npm run prepare:standalone && electron-builder"
+  },
+
+  "build": {
+    "appId": "com.phonepos.app",
+    "productName": "PhonePOS",
+
+    "directories": {
+      "output": "release"
+    },
+
+    "asar": true,
+
+    "files": [
+      "electron/main.js",
+      "package.json"
+    ],
+
+    "extraResources": [
+      {
+        "from": "electron/next/server.js",
+        "to": "next/server.js"
+      },
+      {
+        "from": "electron/next/package.json",
+        "to": "next/package.json"
+      },
+      {
+        "from": "electron/next/.next",
+        "to": "next/.next",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "electron/next/public",
+        "to": "next/public",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "electron/next/node_modules",
+        "to": "next/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "electron/runtime/node.exe",
+        "to": "node.exe"
+      }
+    ],
+
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+
+  "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
+    "@prisma/client": "^6.16.2",
+    "autoprefixer": "^10.5.4",
+    "bcryptjs": "^3.0.3",
+    "chart.js": "^4.5.1",
+    "cookie": "^2.0.1",
+    "date-fns": "^4.4.0",
+    "jsbarcode": "^3.12.3",
+    "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "lucide-react": "^1.25.0",
+    "next": "16.2.11",
+    "postcss": "^8.5.22",
+    "react": "19.2.4",
+    "react-barcode": "^1.6.1",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.82.0",
+    "react-hot-toast": "^2.6.0",
+    "tailwindcss": "^3.4.19",
+    "xlsx": "^0.18.5",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  },
+
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie": "^0.6.0",
+    "@types/jsbarcode": "^3.11.4",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "electron": "^41.10.6",
+    "electron-builder": "^26.15.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.11",
+    "prisma": "^6.16.2",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3"
+  }
+}

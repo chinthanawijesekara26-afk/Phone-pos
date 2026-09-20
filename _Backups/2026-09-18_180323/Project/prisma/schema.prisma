@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CASHIER)
+  createdAt DateTime @default(now())
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  sales     Sale[]
+  repairs   Repair[]   @relation("TechnicianRepairs")
+  customers Customer[] @relation("CashierCustomers")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  CASHIER
+  TECHNICIAN
+}
+
+model Brand {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  country   String?
+  logoUrl   String?
+  createdAt DateTime @default(now())
+
+  products Product[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+
+  barcode     String? @unique
+  productCode String? @unique
+
+  imei         String? @unique
+  serialNumber String? @unique
+
+  name  String
+  model String?
+
+  brandId    Int?
+  categoryId Int?
+
+  storage String?
+  ram     String?
+  color   String?
+
+  purchasePrice Float
+  sellingPrice  Float
+  discountPrice Float?
+
+  tax Float @default(0)
+
+  stock        Int @default(0)
+  reorderLevel Int @default(5)
+
+  warrantyMonths Int @default(12)
+
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brand     Brand?     @relation(fields: [brandId], references: [id])
+  category  Category?  @relation(fields: [categoryId], references: [id])
+  saleItems SaleItem[]
+  Repair    Repair[]
+}
+
+model Supplier {
+  id        Int      @id @default(autoincrement())
+  name      String
+  company   String?
+  phone     String?  @unique
+  email     String?
+  address   String?
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id            Int      @id @default(autoincrement())
+  name          String
+  phone         String   @unique
+  email         String?
+  address       String?
+  loyaltyPoints Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  cashierId Int?
+  cashier   User? @relation("CashierCustomers", fields: [cashierId], references: [id])
+
+  sales        Sale[]
+  installments Installment[]
+  repairs      Repair[]
+}
+
+model Sale {
+  id         Int      @id @default(autoincrement())
+  invoiceNo  String   @unique
+  customerId Int?
+  cashierId  Int
+  saleDate   DateTime @default(now())
+
+  subtotal   Float
+  discount   Float @default(0)
+  tax        Float @default(0)
+  grandTotal Float
+
+  paymentMethod PaymentMethod
+
+  cashReceived Float?
+  cardReceived Float?
+  balance      Float?
+
+  status SaleStatus @default(PAID)
+
+  customer Customer? @relation(fields: [customerId], references: [id])
+  cashier  User      @relation(fields: [cashierId], references: [id])
+
+  saleItems    SaleItem[]
+  installments Installment[]
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  QR
+  BANK
+  INSTALLMENT
+  SPLIT
+}
+
+enum SaleStatus {
+  PAID
+  PENDING
+  CANCELLED
+}
+
+model SaleItem {
+  id        Int   @id @default(autoincrement())
+  saleId    Int
+  productId Int
+  quantity  Int
+  price     Float
+  discount  Float @default(0)
+
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Installment {
+  id                 Int               @id @default(autoincrement())
+  saleId             Int
+  customerId         Int
+  totalAmount        Float
+  downPayment        Float
+  interestRate       Float             @default(0)
+  loanAmount         Float
+  months             Int
+  monthlyInstallment Float
+  remainingBalance   Float
+  status             InstallmentStatus @default(ACTIVE)
+  createdAt          DateTime          @default(now())
+
+  sale     Sale     @relation(fields: [saleId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  payments InstallmentPayment[]
+}
+
+enum InstallmentStatus {
+  ACTIVE
+  COMPLETED
+  DEFAULTED
+}
+
+model InstallmentPayment {
+  id            Int           @id @default(autoincrement())
+  contractId    Int
+  installmentNo Int
+  dueDate       DateTime
+  paidDate      DateTime?
+  amount        Float
+  lateFee       Float         @default(0)
+  status        PaymentStatus @default(UNPAID)
+
+  contract Installment @relation(fields: [contractId], references: [id])
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+  LATE
+}
+
+model Repair {
+  id                     Int          @id @default(autoincrement())
+  customerId             Int
+  device                 String?
+  condition              String?
+  problem                String?
+  technicianId           Int?
+  advancePayment         Float        @default(0)
+  costEstimate           Float?
+  actualCost             Float?
+  expectedCompletionDate DateTime?
+  status                 RepairStatus @default(PENDING)
+  createdAt              DateTime     @default(now())
+  completedAt            DateTime?
+  updatedAt              DateTime     @updatedAt
+
+  customer   Customer @relation(fields: [customerId], references: [id])
+  technician User?    @relation("TechnicianRepairs", fields: [technicianId], references: [id])
+  Product    Product? @relation(fields: [productId], references: [id])
+  productId  Int?
+}
+
+enum RepairStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
