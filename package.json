@@ -3,39 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "main": "electron/main.js",
-
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
-
     "prepare:standalone": "powershell -ExecutionPolicy Bypass -File .\\prepare-standalone.ps1",
-
     "electron": "electron .",
-
     "electron:build": "npm run prepare:standalone && electron-builder"
   },
-
   "build": {
     "appId": "com.phonepos.app",
     "productName": "PhonePOS",
-
     "directories": {
       "output": "release"
     },
-
     "asar": true,
-
     "files": [
       "electron/main.js",
       "package.json"
     ],
-
     "extraResources": [
       {
         "from": "electron/next/server.js",
@@ -71,7 +61,6 @@
         "to": "node.exe"
       }
     ],
-
     "win": {
       "target": [
         {
@@ -82,7 +71,6 @@
         }
       ]
     },
-
     "nsis": {
       "oneClick": false,
       "perMachine": false,
@@ -91,11 +79,9 @@
       "createStartMenuShortcut": true
     }
   },
-
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
-
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@prisma/client": "^6.16.2",
@@ -113,6 +99,7 @@
     "postcss": "^8.5.22",
     "react": "19.2.4",
     "react-barcode": "^1.6.1",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.82.0",
     "react-hot-toast": "^2.6.0",
@@ -121,7 +108,6 @@
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },
-
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie": "^0.6.0",
