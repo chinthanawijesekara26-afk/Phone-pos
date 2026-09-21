@@ -88,23 +88,121 @@ export async function DELETE(
         params: Promise<{ id: string }>;
     }
 ) {
+    try {
+        const { id } = await params;
+        const productId = Number(id);
 
-    const { id } = await params;
-
-
-    await prisma.product.delete({
-
-        where: {
-            id: Number(id),
-        },
-
-    });
-
-
-    return new NextResponse(
-        null,
-        {
-            status: 204,
+        if (!Number.isInteger(productId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Invalid product ID",
+                },
+                { status: 400 }
+            );
         }
-    );
+
+        // Check product exists
+        const product = await prisma.product.findUnique({
+            where: {
+                id: productId,
+            },
+        });
+
+        if (!product) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Product not found",
+                },
+                { status: 404 }
+            );
+        }
+
+        // Check if product is already used in sales
+        const saleItemCount = await prisma.saleItem.count({
+            where: {
+                productId: productId,
+            },
+        });
+
+        if (saleItemCount > 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error:
+                        "This product cannot be deleted because it is already used in a sale.",
+                },
+                { status: 409 }
+            );
+        }
+
+        // Check if product is used in repairs
+        const repairCount = await prisma.repair.count({
+            where: {
+                productId: productId,
+            },
+        });
+
+        if (repairCount > 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error:
+                        "This product cannot be deleted because it is linked to a repair.",
+                },
+                { status: 409 }
+            );
+        }
+
+        // Delete product
+        await prisma.product.delete({
+            where: {
+                id: productId,
+            },
+        });
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: "Product deleted successfully.",
+            },
+            { status: 200 }
+        );
+
+    } catch (error: any) {
+        console.error("DELETE PRODUCT ERROR:", error);
+
+        if (error?.code === "P2003") {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error:
+                        "This product is being used by another record and cannot be deleted.",
+                },
+                { status: 409 }
+            );
+        }
+
+        if (error?.code === "P2025") {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Product not found.",
+                },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            {
+                success: false,
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to delete product.",
+            },
+            { status: 500 }
+        );
+    }
 }

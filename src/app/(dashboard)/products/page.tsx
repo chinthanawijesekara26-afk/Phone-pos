@@ -29,13 +29,45 @@ export default function ProductsPage() {
         return nameMatch && price >= min && price <= max
     })
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Delete this product?')) return
-        const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
-        if (res.ok) {
-            setProducts(products.filter(p => p.id !== id))
-        }
+ const handleDelete = async (id: number) => {
+    if (!confirm("Delete this product?")) {
+        return;
     }
+
+    try {
+        const res = await fetch(`/api/products/${id}`, {
+            method: "DELETE",
+        });
+
+        const data = await res.json();
+
+        console.log("DELETE PRODUCT RESPONSE:", data);
+
+        if (!res.ok) {
+            alert(
+                data.error ||
+                "Failed to delete product."
+            );
+            return;
+        }
+
+        setProducts(prev =>
+            prev.filter(product => product.id !== id)
+        );
+
+        alert("Product deleted successfully.");
+
+    } catch (error) {
+        console.error(
+            "DELETE PRODUCT ERROR:",
+            error
+        );
+
+        alert(
+            "Something went wrong while deleting the product."
+        );
+    }
+};
 
     const getStockStatus = (stock: number, reorderLevel: number) => {
         if (stock === 0) return { label: 'Out of Stock', color: 'bg-red-100 text-red-800' }

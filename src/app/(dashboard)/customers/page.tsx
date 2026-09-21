@@ -21,11 +21,45 @@ export default function CustomersPage() {
     )
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Delete this customer?')) return
-        const res = await fetch(`/api/customers/${id}`, { method: 'DELETE' })
-        if (res.ok) setCustomers(customers.filter(c => c.id !== id))
+    if (!confirm('Delete this customer?')) {
+        return;
     }
 
+    try {
+        const res = await fetch(`/api/customers/${id}`, {
+            method: 'DELETE',
+        });
+
+        const data = await res.json();
+
+        console.log('DELETE RESPONSE:', data);
+
+        if (!res.ok) {
+            alert(
+                data.error ||
+                'Failed to delete customer.'
+            );
+            return;
+        }
+
+        // Remove deleted customer immediately from UI
+        setCustomers(prev =>
+            prev.filter(customer => customer.id !== id)
+        );
+
+        alert('Customer deleted successfully.');
+
+    } catch (error) {
+        console.error(
+            'DELETE CUSTOMER ERROR:',
+            error
+        );
+
+        alert(
+            'Something went wrong while deleting the customer.'
+        );
+    }
+};
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
