@@ -26,117 +26,44 @@ export default function BackupPage() {
         useState("");
 
     const handleBackup = async () => {
-    if (backupRunning) {
-        return;
-    }
-
-    const confirmed = window.confirm(
-        "Do you want to create a complete PhonePOS backup now?"
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
-    setBackupRunning(true);
-    setSuccess(null);
-    setMessage("Backup is running...");
-    setOutput("");
-
     try {
+        // setLoading(true);
+        setMessage("");
+
         const response = await fetch(
-            "/api/backup",
+            "http://127.0.0.1:8787/backup",
             {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                        "application/json",
-                },
-                cache: "no-store",
+                method: "POST"
             }
         );
 
-        // ---------------------------------------------
-        // READ RESPONSE SAFELY
-        // ---------------------------------------------
+        const data = await response.json();
 
-        const text =
-            await response.text();
-
-        let data: any = {};
-
-        if (text.trim()) {
-            try {
-                data = JSON.parse(text);
-            } catch {
-                throw new Error(
-                    "Backup server returned an invalid response."
-                );
-            }
-        }
-
-        // ---------------------------------------------
-        // RAILWAY / NON-WINDOWS
-        // ---------------------------------------------
-
-        if (
-            data.code ===
-            "WINDOWS_BACKUP_ONLY"
-        ) {
-            setSuccess(false);
-
-            setMessage(
-                "Local Windows backup is not available on Railway."
-            );
-
-            setOutput(
-                data.message || ""
-            );
-
-            return;
-        }
-
-        // ---------------------------------------------
-        // NORMAL ERROR
-        // ---------------------------------------------
-
-        if (
-            !response.ok ||
-            !data.success
-        ) {
+        if (!response.ok || !data.success) {
             throw new Error(
-                data.message ||
-                    "Backup failed."
+                data.message || "Backup failed."
             );
         }
-
-        // ---------------------------------------------
-        // SUCCESS
-        // ---------------------------------------------
-
-        setSuccess(true);
 
         setMessage(
             "Backup completed successfully."
         );
 
-        setOutput(
-            data.output || ""
-        );
-    } catch (error: any) {
+    } catch (error) {
+
         console.error(
-            "BACKUP ERROR:",
+            "Backup error:",
             error
         );
 
-        setSuccess(false);
-
         setMessage(
-            error?.message ||
-                "Backup failed."
+            error instanceof Error
+                ? error.message
+                : "Backup failed."
         );
+
     } finally {
-        setBackupRunning(false);
+        // setLoading(false);
     }
 };
 
