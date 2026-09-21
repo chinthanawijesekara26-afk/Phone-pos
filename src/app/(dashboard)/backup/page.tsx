@@ -22,80 +22,123 @@ export default function BackupPage() {
 
     const [success, setSuccess] =
         useState<boolean | null>(null);
-
     const [output, setOutput] =
         useState("");
 
     const handleBackup = async () => {
+    if (backupRunning) {
+        return;
+    }
 
-        if (backupRunning) {
-            return;
-        }
+    const confirmed = window.confirm(
+        "Do you want to create a complete PhonePOS backup now?"
+    );
 
-        const confirmed =
-            window.confirm(
-                "Do you want to create a complete PhonePOS backup now?"
-            );
+    if (!confirmed) {
+        return;
+    }
 
-        if (!confirmed) {
-            return;
-        }
+    setBackupRunning(true);
+    setSuccess(null);
+    setMessage("Backup is running...");
+    setOutput("");
 
-        setBackupRunning(true);
-        setSuccess(null);
-        setMessage("Backup is running...");
-        setOutput("");
+    try {
+        const response = await fetch(
+            "/api/backup",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                },
+                cache: "no-store",
+            }
+        );
 
-        try {
+        // ---------------------------------------------
+        // READ RESPONSE SAFELY
+        // ---------------------------------------------
 
-            const response =
-                await fetch(
-                    "/api/backup",
-                    {
-                        method: "POST",
-                    }
-                );
+        const text =
+            await response.text();
 
-            const data =
-                await response.json();
+        let data: any = {};
 
-            if (!response.ok || !data.success) {
-
+        if (text.trim()) {
+            try {
+                data = JSON.parse(text);
+            } catch {
                 throw new Error(
-                    data.message ||
-                    "Backup failed."
+                    "Backup server returned an invalid response."
                 );
             }
+        }
 
-            setSuccess(true);
+        // ---------------------------------------------
+        // RAILWAY / NON-WINDOWS
+        // ---------------------------------------------
 
-            setMessage(
-                "Backup completed successfully."
-            );
-
-            setOutput(
-                data.output || ""
-            );
-
-        } catch (error: any) {
-
-            console.error(
-                "BACKUP ERROR:",
-                error
-            );
-
+        if (
+            data.code ===
+            "WINDOWS_BACKUP_ONLY"
+        ) {
             setSuccess(false);
 
             setMessage(
-                error?.message ||
-                "Backup failed."
+                "Local Windows backup is not available on Railway."
             );
 
-        } finally {
+            setOutput(
+                data.message || ""
+            );
 
-            setBackupRunning(false);
+            return;
         }
-    };
+
+        // ---------------------------------------------
+        // NORMAL ERROR
+        // ---------------------------------------------
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+            throw new Error(
+                data.message ||
+                    "Backup failed."
+            );
+        }
+
+        // ---------------------------------------------
+        // SUCCESS
+        // ---------------------------------------------
+
+        setSuccess(true);
+
+        setMessage(
+            "Backup completed successfully."
+        );
+
+        setOutput(
+            data.output || ""
+        );
+    } catch (error: any) {
+        console.error(
+            "BACKUP ERROR:",
+            error
+        );
+
+        setSuccess(false);
+
+        setMessage(
+            error?.message ||
+                "Backup failed."
+        );
+    } finally {
+        setBackupRunning(false);
+    }
+};
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
