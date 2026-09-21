@@ -78,7 +78,7 @@ export default function SalesPage() {
 
     const [userRole, setUserRole] = useState<string>('CASHIER');
     const [userName, setUserName] = useState<string>('');
-
+    const [userId, setUserId] = useState<number | null>(null)
     const [globalDiscountType, setGlobalDiscountType] =
         useState<DiscountType>('percentage');
 
