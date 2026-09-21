@@ -456,15 +456,7 @@ export default function EditProductPage() {
                         type="number"
                     />
 
-                    {/* TAX */}
-                    <FormInput
-                        label="Tax (%)"
-                        register={register('tax', {
-                            valueAsNumber: true,
-                        })}
-                        error={errors.tax}
-                        type="number"
-                    />
+                    
 
                     {/* STOCK */}
                     <FormInput

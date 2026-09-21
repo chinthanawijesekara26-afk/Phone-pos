@@ -5,14 +5,17 @@ import { useRouter } from 'next/navigation';
 import { Printer, ArrowLeft } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 
-type ReceiptItem = {
+interface ReceiptItem {
+    id: number;
+    productId: number;
     name: string;
-    quantity: number;
-    price: number;
-    marketPrice?: number;
-    discount?: number;
-};
 
+    quantity: number;
+
+    price: number;
+
+    marketPrice?: number | null;
+}
 type Receipt = {
     invoiceNo: string;
     date: string;
@@ -158,25 +161,22 @@ export default function ReceiptPage() {
     /* =========================================================
        MARKET PRICE
 
-       If marketPrice > 0:
-           use marketPrice
-
-       If marketPrice = 0:
-           use selling price
+       IMPORTANT:
+       Product.discountPrice is used as the MARKET PRICE.
 
        Example:
+       DB sellingPrice  = 130  -> OUR PRICE
+       DB discountPrice = 150  -> MARKET PRICE
 
-       Market Price = 25
-       Our Price    = 20
-
-       Saving = 5
+       Receipt:
+       MARKET PRICE = 150.00
+       OUR PRICE    = 130.00
+       AMOUNT       = 130.00
     ========================================================= */
 
     const getMarketPrice = (item: ReceiptItem): number => {
-        const market = number(item.marketPrice);
-        const selling = number(item.price);
-        return market > 0 ? market : selling;
-    };
+    return number(item.marketPrice);
+};
 
     /* =========================================================
        MARKET TOTAL
@@ -221,33 +221,33 @@ export default function ReceiptPage() {
     );
 
     /* =========================================================
-       ACTUAL DISCOUNT
+       CUSTOMER SAVING
 
-       We use the actual price difference.
+       Saving = MARKET PRICE - OUR PRICE.
 
        Example:
-
-       Market Price = 25
-       Selling Price = 20
-
-       You Saved = 5
+       Market Price = 150
+       Our Price    = 130
+       You Saved    = 20
     ========================================================= */
 
-    const discount =
-        marketSaving > 0
-            ? marketSaving
-            : number(receipt.discountTotal);
+    const discount = marketSaving;
 
     /* =========================================================
        NET TOTAL
 
-       Actual customer payment amount.
+       The customer pays the OUR PRICE.
+
+       Therefore the receipt total is calculated from
+       item.price (selling price), not the market price.
+
+       Example:
+       Market Price = 150
+       Our Price    = 130
+       Net Total    = 130
     ========================================================= */
 
-    const netTotal =
-        receipt.total !== undefined
-            ? number(receipt.total)
-            : sellingTotal;
+    const netTotal = sellingTotal;
 
     /* =========================================================
        PAYMENT

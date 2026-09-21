@@ -302,40 +302,50 @@ export default function SalesPage() {
                 );
             }
 
-            const sellingPrice =
-                Number(
-                    product.sellingPrice
-                );
+            const sellingPrice = Number(product.discountPrice || 0);
 
-            return [
-                ...prev,
-                {
-                    product,
-                    quantity: 1,
+const discountPrice =
+    product.discountPrice !== null &&
+    product.discountPrice !== undefined &&
+    Number(product.discountPrice) > 0
+        ? Number(product.discountPrice)
+        : sellingPrice;
 
-                    discountType:
-                        'amount',
+// Never allow discount price above selling price
+const finalPrice = Math.min(
+    sellingPrice,
+    discountPrice
+);
 
-                    discountValue: 0,
+const automaticDiscount = Math.max(
+    0,
+    sellingPrice - finalPrice
+);
 
-                    manualPrice:
-                    sellingPrice,
+return [
+    ...prev,
+    {
+        product,
+        quantity: 1,
 
-                    requiresApproval:
-                        false,
+        discountType: 'amount',
 
-                    discountReason: '',
+        discountValue: automaticDiscount,
 
-                    isPriceEdited:
-                        false,
+        manualPrice: finalPrice,
 
-                    originalPrice:
-                    sellingPrice,
+        finalUnitPrice: finalPrice,
 
-                    finalUnitPrice:
-                    sellingPrice,
-                },
-            ];
+        originalPrice: sellingPrice,
+
+        isPriceEdited:
+            finalPrice !== sellingPrice,
+
+        requiresApproval: false,
+
+        discountReason: '',
+    },
+];
         });
 
         // Initial price input
@@ -343,7 +353,7 @@ export default function SalesPage() {
             ...prev,
             [product.id]:
                 Number(
-                    product.sellingPrice
+                    product.discountPrice
                 ).toFixed(2),
         }));
 
@@ -460,14 +470,14 @@ export default function SalesPage() {
                 cartItem.finalUnitPrice ??
                 cartItem.manualPrice ??
                 Number(
-                    product.sellingPrice
+                    product.discountPrice
                 );
 
             const automaticDiscount =
                 Math.max(
                     0,
                     Number(
-                        product.sellingPrice
+                        product.discountPrice
                     ) - currentPrice
                 );
 
@@ -600,12 +610,12 @@ export default function SalesPage() {
 
         const purchasePrice =
             Number(
-                product.purchasePrice
+                product.sellingPrice
             );
 
         const sellingPrice =
             Number(
-                product.sellingPrice
+                product.discountPrice
             );
 
         if (
@@ -812,12 +822,12 @@ export default function SalesPage() {
 
         const purchasePrice =
             Number(
-                product.purchasePrice
+                product.sellingPrice
             );
 
         const sellingPrice =
             Number(
-                product.sellingPrice
+                product.discountPrice
             );
 
         const inputValue =
@@ -985,12 +995,12 @@ export default function SalesPage() {
 
         const minPrice =
             Number(
-                item.product.purchasePrice
+                item.product.sellingPrice
             );
 
         const maxPrice =
             Number(
-                item.product.sellingPrice
+                item.product.discountPrice
             );
 
         if (isAdmin) {
@@ -1118,7 +1128,7 @@ export default function SalesPage() {
                 sum +
                 Number(
                     item.product
-                        .sellingPrice
+                        .discountPrice
                 ) *
                 item.quantity,
             0
@@ -1374,13 +1384,13 @@ export default function SalesPage() {
                             const minPrice =
                                 Number(
                                     item.product
-                                        .purchasePrice
+                                        .sellingPrice
                                 );
 
                             const maxPrice =
                                 Number(
                                     item.product
-                                        .sellingPrice
+                                        .discountPrice
                                 );
 
                             return (
@@ -1399,14 +1409,14 @@ export default function SalesPage() {
                         Number(
                             invalidItem
                                 .product
-                                .purchasePrice
+                                .sellingPrice
                         );
 
                     const maxPrice =
                         Number(
                             invalidItem
                                 .product
-                                .sellingPrice
+                                .discountPrice
                         );
 
                     toast.error(
@@ -1721,7 +1731,7 @@ export default function SalesPage() {
                         const finalPrice = getItemPrice(item);
 
                         const marketPrice =
-                            Number(item.product.sellingPrice) || 0;
+                            Number(item.product.discountPrice) || 0;
 
                         return {
                             name: item.product.name,
@@ -2110,12 +2120,12 @@ export default function SalesPage() {
                             <span className="text-xs text-blue-600 ml-2">
                                 (Min: LKR{' '}
                                 {Number(
-                                    firstProduct.purchasePrice
+                                    firstProduct.sellingPrice
                                 ).toFixed(2)}
                                 {' '}-
                                 Max: LKR{' '}
                                 {Number(
-                                    firstProduct.sellingPrice
+                                    firstProduct.discountPrice
                                 ).toFixed(2)}
                                 )
                             </span>
@@ -2341,13 +2351,13 @@ export default function SalesPage() {
                                     const minPrice =
                                         Number(
                                             item.product
-                                                .purchasePrice
+                                                .sellingPrice
                                         );
 
                                     const maxPrice =
                                         Number(
                                             item.product
-                                                .sellingPrice
+                                                .discountPrice
                                         );
 
                                     return (
