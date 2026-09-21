@@ -385,19 +385,8 @@ export default function CreateProductPage() {
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormInput
-                            label="Product Code"
-                            register={register('productCode')}
-                            error={errors.productCode}
-                            placeholder="e.g., AG-001"
-                        />
+                      
 
-                        <FormInput
-                            label="Barcode"
-                            register={register('barcode')}
-                            error={errors.barcode}
-                            placeholder="Scan or enter barcode"
-                        />
 
                         <FormInput
                             label="Name *"
@@ -408,40 +397,112 @@ export default function CreateProductPage() {
                         />
 
                         {/* Brand */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Brand
-                            </label>
+<div>
+    <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-700">
+            Brand
+        </label>
 
-                            <select
-                                {...register('brandId', {
-                                    setValueAs: (value) =>
-                                        value === ''
-                                            ? null
-                                            : Number(value),
-                                })}
-                                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="">
-                                    Select Brand
-                                </option>
+        <button
+            type="button"
+            onClick={() => {
+                const brandName = prompt('Enter new brand name:');
 
-                                {brands.map((brand) => (
-                                    <option
-                                        key={brand.id}
-                                        value={brand.id}
-                                    >
-                                        {brand.name}
-                                    </option>
-                                ))}
-                            </select>
+                if (!brandName?.trim()) return;
 
-                            {errors.brandId && (
-                                <p className="mt-1 text-sm text-red-600">
-                                    {errors.brandId.message}
-                                </p>
-                            )}
-                        </div>
+                fetch('/api/brands', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: brandName.trim(),
+                    }),
+                })
+                    .then(async (res) => {
+                        const result = await res.json();
+
+                        if (!res.ok) {
+                            throw new Error(
+                                result.message ||
+                                result.error ||
+                                'Failed to add brand'
+                            );
+                        }
+
+                        return result;
+                    })
+                    .then((newBrand) => {
+                        const brand =
+                            newBrand.data ?? newBrand;
+
+                        setBrands((prev) => [
+                            ...prev,
+                            brand,
+                        ]);
+
+                        // Automatically select new brand
+                        // after creating it
+                        const select =
+                            document.querySelector(
+                                'select[name="brandId"]'
+                            ) as HTMLSelectElement | null;
+
+                        if (select) {
+                            select.value = String(
+                                brand.id
+                            );
+
+                            select.dispatchEvent(
+                                new Event('change', {
+                                    bubbles: true,
+                                })
+                            );
+                        }
+                    })
+                    .catch((err) => {
+                        alert(
+                            err instanceof Error
+                                ? err.message
+                                : 'Failed to add brand'
+                        );
+                    });
+            }}
+            className="text-blue-600 hover:text-blue-800 text-sm font-semibold"
+        >
+            + Add Brand
+        </button>
+    </div>
+
+    <select
+        {...register('brandId', {
+            setValueAs: (value) =>
+                value === ''
+                    ? null
+                    : Number(value),
+        })}
+        className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+    >
+        <option value="">
+            Select Brand
+        </option>
+
+        {brands.map((brand) => (
+            <option
+                key={brand.id}
+                value={brand.id}
+            >
+                {brand.name}
+            </option>
+        ))}
+    </select>
+
+    {errors.brandId && (
+        <p className="mt-1 text-sm text-red-600">
+            {errors.brandId.message}
+        </p>
+    )}
+</div>
                     </div>
                 </div>
 
@@ -527,24 +588,7 @@ export default function CreateProductPage() {
                             )}
 
                             {/* Accessory */}
-                            {isAccessoryCategory && (
-                                <FormInput
-                                    label="Quantity *"
-                                    register={register(
-                                        'quantity',
-                                        {
-                                            setValueAs: (value) =>
-                                                value === ''
-                                                    ? null
-                                                    : Number(value),
-                                        }
-                                    )}
-                                    error={errors.quantity}
-                                    type="number"
-                                    required
-                                    placeholder="Enter quantity"
-                                />
-                            )}
+                           
 
                             {/* Warranty */}
                             <FormInput
@@ -625,6 +669,7 @@ export default function CreateProductPage() {
                             )}
                             error={errors.stock}
                             type="number"
+                            required
                             placeholder="0"
                         />
 
