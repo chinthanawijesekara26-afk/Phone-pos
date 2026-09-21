@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/src/lib/prisma';
+import jwt from 'jsonwebtoken';
 
 const allowedRoles = ['ADMIN', 'CASHIER'];
 
@@ -8,38 +9,118 @@ const allowedRoles = ['ADMIN', 'CASHIER'];
 // Helper - Check ADMIN
 // ============================================================
 
+// ============================================================
+// Helper - Check ADMIN
+// ============================================================
+
 async function checkAdmin(request: NextRequest) {
-    const token = request.cookies.get('token')?.value;
+    try {
+        const token = request.cookies.get('token')?.value;
 
-    if (!token) {
-        return null;
-    }
-
-    // If your authentication is already handled by middleware,
-    // this endpoint can still be protected through your auth/me.
-    const authResponse = await fetch(
-        `${request.nextUrl.origin}/api/auth/me`,
-        {
-            headers: {
-                Cookie: `token=${token}`,
-            },
-            cache: 'no-store',
+        if (!token) {
+            console.log('ADMIN CHECK: No token found');
+            return null;
         }
-    );
 
-    if (!authResponse.ok) {
+        const secret = process.env.JWT_SECRET;
+
+        if (!secret) {
+            console.error(
+                'ADMIN CHECK ERROR: JWT_SECRET is missing'
+            );
+            return null;
+        }
+
+        // Verify JWT directly
+        const decoded = jwt.verify(
+            token,
+            secret
+        ) as {
+            id?: number | string;
+            userId?: number | string;
+            email?: string;
+            role?: string;
+        };
+
+        console.log(
+            'ADMIN CHECK JWT:',
+            {
+                id: decoded.id,
+                userId: decoded.userId,
+                email: decoded.email,
+                role: decoded.role,
+            }
+        );
+
+        // Get user ID from token
+        const rawUserId =
+            decoded.id ??
+            decoded.userId;
+
+        if (!rawUserId) {
+            console.error(
+                'ADMIN CHECK: User ID missing from JWT'
+            );
+            return null;
+        }
+
+        const userId = Number(rawUserId);
+
+        if (!Number.isInteger(userId)) {
+            console.error(
+                'ADMIN CHECK: Invalid user ID'
+            );
+            return null;
+        }
+
+        // Find user in MySQL
+        const user =
+            await prisma.user.findUnique({
+                where: {
+                    id: userId,
+                },
+
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    isActive: true,
+                },
+            });
+
+        if (!user) {
+            console.error(
+                'ADMIN CHECK: User not found'
+            );
+            return null;
+        }
+
+        if (!user.isActive) {
+            console.error(
+                'ADMIN CHECK: User is inactive'
+            );
+            return null;
+        }
+
+        if (user.role !== 'ADMIN') {
+            console.error(
+                'ADMIN CHECK: User is not ADMIN'
+            );
+            return null;
+        }
+
+        return user;
+
+    } catch (error) {
+        console.error(
+            'ADMIN CHECK JWT ERROR:',
+            error
+        );
+
         return null;
     }
-
-    const user = await authResponse.json();
-
-    if (user?.role !== 'ADMIN') {
-        return null;
-    }
-
-    return user;
 }
-
 // ============================================================
 // GET - Get employees
 // ============================================================
@@ -260,4 +341,4 @@ export async function POST(
             { status: 500 }
         );
     }
-}
+}   
