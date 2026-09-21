@@ -1553,7 +1553,7 @@ return [
                         customer?.id ||
                         null,
 
-                    cashierId: 1,
+                    cashierId: 7,
 
                     items: cart.map(
                         (item) => {
