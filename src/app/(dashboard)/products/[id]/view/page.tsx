@@ -205,18 +205,18 @@ export default function ViewProductPage() {
                         </h2>
                         <div className="space-y-3">
                             <InfoItem
-                                label="Purchase Price"
+                                label="Cost Price"
                                 value={`LKR ${product.purchasePrice.toFixed(2)}`}
                                 icon={<DollarSign className="w-4 h-4" />}
                             />
                             <InfoItem
-                                label="Selling Price"
+                                label="Low Price"
                                 value={`LKR ${product.sellingPrice.toFixed(2)}`}
                                 icon={<DollarSign className="w-4 h-4" />}
                             />
                             {product.discountPrice && (
                                 <InfoItem
-                                    label="Discount Price"
+                                    label="High Price"
                                     value={`LKR ${product.discountPrice.toFixed(2)}`}
                                     icon={<DollarSign className="w-4 h-4" />}
                                 />

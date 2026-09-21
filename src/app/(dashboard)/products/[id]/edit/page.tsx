@@ -423,7 +423,7 @@ export default function EditProductPage() {
 
                     {/* PURCHASE PRICE */}
                     <FormInput
-                        label="Purchase Price (LKR)"
+                        label="Cost Price (LKR)"
                         register={register('purchasePrice', {
                             valueAsNumber: true,
                         })}
@@ -434,7 +434,7 @@ export default function EditProductPage() {
 
                     {/* SELLING PRICE */}
                     <FormInput
-                        label="Selling Price (LKR)"
+                        label="Low Price (LKR)"
                         register={register('sellingPrice', {
                             valueAsNumber: true,
                         })}
@@ -445,7 +445,7 @@ export default function EditProductPage() {
 
                     {/* DISCOUNT PRICE */}
                     <FormInput
-                        label="Discount Price"
+                        label="High Price"
                         register={register('discountPrice', {
                             setValueAs: (value) =>
                                 value === ''
